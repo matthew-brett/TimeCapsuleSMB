@@ -566,6 +566,16 @@ patch_once(
 	DEBUG(0, ("xattr_tdb_load_attrs: fetch status=%s dsize=%u\\n",
 	   nt_errstr(status),
 	   (unsigned int)data.dsize));
+	if (NT_STATUS_EQUAL(status, NT_STATUS_NOT_FOUND)) {
+		struct tdb_xattrs *empty = talloc_zero(mem_ctx, struct tdb_xattrs);
+		DEBUG(0, ("xattr_tdb_load_attrs: treating NOT_FOUND as empty attrs for id=%s\\n",
+		   file_id_string(mem_ctx, id)));
+		if (empty == NULL) {
+			return NT_STATUS_NO_MEMORY;
+		}
+		*presult = empty;
+		return NT_STATUS_OK;
+	}
 	if (!NT_STATUS_IS_OK(status)) {
 		return NT_STATUS_INTERNAL_DB_CORRUPTION;
 	}
